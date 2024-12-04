@@ -1,0 +1,25 @@
+### 创建账户
+POST http://localhost:8888/createAccount
+Content-Type: application/json
+
+{}
+
+
+### 存款
+POST http://localhost:8888/deposit
+Content-Type: application/json
+
+{
+  "accountId": 2,
+  "sumOfMoney": "999"
+}
+
+
+### 取款
+POST http://localhost:8888/withdrawMoney
+Content-Type: application/json
+
+{
+  "accountId": 2,
+  "sumOfMoney": "1000"
+}

@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.yuefan.dao.AccountDao">
+
+    <resultMap id="BaseResultMap" type="com.yuefan.entity.AccountEntity">
+        <id property="accountId" column="account_id" jdbcType="INTEGER"/>
+        <result property="unfilledVacancies" column="unfilled_vacancies" jdbcType="DECIMAL"/>
+        <result property="createTime" column="create_time" jdbcType="TIMESTAMP"/>
+        <result property="updateTime" column="update_time" jdbcType="TIMESTAMP"/>
+    </resultMap>
+
+    <sql id="Base_Column_List">
+        account_id,unfilled_vacancies,create_time,
+        update_time
+    </sql>
+
+    <insert id="createAccount" parameterType="com.yuefan.entity.AccountEntity" useGeneratedKeys="true"
+            keyProperty="accountId">
+        INSERT INTO account (unfilled_vacancies)
+        VALUES (#{unfilledVacancies})
+    </insert>
+
+    <update id="updateAccount">
+        UPDATE account
+        SET unfilled_vacancies = #{unfilledVacancies},
+            update_time        = #{updateTime}
+        WHERE account_id = #{accountId}
+    </update>
+
+    <select id="selectAccountById" resultType="com.yuefan.entity.AccountEntity">
+        select *
+        from account
+        where account_id = #{accountId}
+    </select>
+</mapper>
