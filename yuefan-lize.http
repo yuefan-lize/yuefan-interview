@@ -10,8 +10,8 @@ POST http://localhost:8888/deposit
 Content-Type: application/json
 
 {
-  "accountId": 2,
-  "sumOfMoney": "999"
+  "accountId": 7,
+  "sumOfMoney": "999.80"
 }
 
 
@@ -20,6 +20,6 @@ POST http://localhost:8888/withdrawMoney
 Content-Type: application/json
 
 {
-  "accountId": 2,
-  "sumOfMoney": "1000"
+  "accountId": 7,
+  "sumOfMoney": "5.28"
 }

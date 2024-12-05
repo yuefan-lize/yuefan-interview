@@ -9,19 +9,21 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.concurrent.locks.ReentrantLock;
 
 @Service
 //@Slf4j
 public class AccountServiceImpl implements AccountService {
+
+    private static final ReentrantLock updateLock = new ReentrantLock();
+
 
     @Resource
     private AccountDao accountDao;
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public AccountEntity createAccount(AccountEntity account) {
-        System.out.println("create account: " + account);
-
+    public synchronized AccountEntity createAccount(AccountEntity account) {
         if (account.getAccountId() == null) {
             account = new AccountEntity();
             account.setUnfilledVacancies(BigDecimal.valueOf(0.0));
@@ -44,15 +46,23 @@ public class AccountServiceImpl implements AccountService {
     @Override
     @Transactional(rollbackFor = Exception.class)
     public AccountEntity deposit(Long accountId, BigDecimal sumOfMoney) {
-        System.out.println("deposit account: " + accountId + " sumOfMoney: " + sumOfMoney);
-        AccountEntity account = accountDao.selectAccountById(accountId);
-        if (account == null) {
-            throw new RuntimeException("账户不存在");
+        updateLock.lock();
+        AccountEntity account;
+        try {
+            account = accountDao.selectAccountById(accountId);
+            if (account == null) {
+                throw new RuntimeException("账户不存在");
+            }
+
+            account.setUnfilledVacancies(account.getUnfilledVacancies().add(sumOfMoney));
+            account.setUpdateTime(LocalDateTime.now());
+            accountDao.updateAccount(account);
+        } catch (Exception e) {
+            throw new RuntimeException("存款失败");
+        } finally {
+            updateLock.unlock();
         }
 
-        account.setUnfilledVacancies(account.getUnfilledVacancies().add(sumOfMoney));
-        account.setUpdateTime(LocalDateTime.now());
-        accountDao.updateAccount(account);
 
 //                int i = 1 / 0;
         return account;
@@ -69,19 +79,26 @@ public class AccountServiceImpl implements AccountService {
     @Transactional(rollbackFor = Exception.class)
     public AccountEntity withdrawMoney(Long accountId, BigDecimal depositSum) {
 
-        System.out.println("withdrawMoney account: " + accountId + " depositSum: " + depositSum);
-        AccountEntity account = accountDao.selectAccountById(accountId);
-        if (account == null) {
-            throw new RuntimeException("账户不存在");
-        }
+        updateLock.lock();
+        AccountEntity account;
+        try {
+            account = accountDao.selectAccountById(accountId);
+            if (account == null) {
+                throw new RuntimeException("账户不存在");
+            }
 
-        if (account.getUnfilledVacancies().compareTo(depositSum) < 0) {
-            throw new RuntimeException("余额不足");
-        }
+            if (account.getUnfilledVacancies().compareTo(depositSum) < 0) {
+                throw new RuntimeException("余额不足");
+            }
 
-        account.setUnfilledVacancies(account.getUnfilledVacancies().subtract(depositSum));
-        account.setUpdateTime(LocalDateTime.now());
-        accountDao.updateAccount(account);
+            account.setUnfilledVacancies(account.getUnfilledVacancies().subtract(depositSum));
+            account.setUpdateTime(LocalDateTime.now());
+            accountDao.updateAccount(account);
+        } catch (Exception e) {
+            throw new RuntimeException("取款失败");
+        } finally {
+            updateLock.unlock();
+        }
 
 
 //        int i = 1 / 0;
